@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>HTTP request for AdaWebPack</title>
+    <script type='module'>
+        import * as AdaWebPack from './adawebpack.mjs';
+
+        (async function () {
+            const {instance} =
+                await WebAssembly.instantiateStreaming(fetch('main.wasm'), {env: AdaWebPack.imports});
+            AdaWebPack.initialize(instance);
+            instance.exports['_ada_main']();
+        })();
+    </script>
+</head>
+<body>
+<h2>HTTP Request from inside WASM using Ada and AdaWebPack</h2>
+
+<p>This example uses <a href="https://github.com/godunko/adawebpack">AdaWebPack</a>.</p>
+<p>See the output in browser developer console.</p>
+
+<p>Actual code:</p>
+<pre>
+
+   L   : aliased Listener;
+   xhr : Web.XHR.Requests.XML_Http_Request;
+
+   overriding procedure Handle_Event
+     (Self : in out Listener; Event : in out Web.DOM.Events.Event'Class)
+   is
+      use type Web.XHR.Requests.State;
+   begin
+      if xhr.Get_Ready_State = Web.XHR.Requests.DONE then
+         WASM.Console.Log (xhr.Get_Response_Text);
+      end if;
+   end Handle_Event;
+
+   procedure Initialize_Example is
+   begin
+      xhr := Web.XHR.Requests.Constructors.New_XML_Http_Request;
+      xhr.Open ("GET", "https://httpbin.org/anything");
+      xhr.Send ("");
+      xhr.Add_Event_Listener ("readystatechange", L'Access);
+   end Initialize_Example;
+
+</pre>
+<section>
+    <h4>Info</h4>
+    <ul>
+        <li><a href="https://github.com/wasm-outbound-http-examples/ada">Demo source code</a></li>
+        <li>Versions used on the moment of build:<small>
+            clang, lld: 15.0.7,
+            AdaWebPack: <a href="https://github.com/godunko/adawebpack/tree/22.1.0">22.1.0</a>.
+        </small></li>
+    </ul>
+</section>
+<footer><small>Created for (wannabe-awesome) <a href="https://github.com/vasilev/HTTP-request-from-inside-WASM">list</a></small>
+</footer>
+</body>
+</html>
